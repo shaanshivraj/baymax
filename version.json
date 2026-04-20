@@ -1,6 +1,6 @@
 {
-  "version_code": 5,
-  "version_name": "1.4",
-  "apk_url": "https://github.com/shaanshivraj/baymax/releases/download/v1.4/PhoneAI.apk",
-  "changelog": "Auto-update 20 Apr 2026: feat: Add Notification Quick-Reply and OTA Update quick action"
+  "version_code": 6,
+  "version_name": "1.5",
+  "apk_url": "https://github.com/shaanshivraj/baymax/releases/download/v1.5/PhoneAI.apk",
+  "changelog": "Auto-update 20 Apr 2026: fix: Don't auto-minimize MainActivity when opened from launcher"
 }
