@@ -78,7 +78,14 @@ jobs:
       # ── 9. Copy & rename APK ─────────────────────────────────────
       - name: Rename APK
         run: |
-          cp PhoneAI-Android/app/build/outputs/apk/debug/app-debug.apk PhoneAI.apk
+          APK=$(find PhoneAI-Android/app/build/outputs/apk -name "*.apk" | head -1)
+          if [ -z "$APK" ]; then
+            echo "❌ APK not found! Searching..."
+            find PhoneAI-Android/app/build -name "*.apk" 2>/dev/null
+            exit 1
+          fi
+          echo "✅ Found APK: $APK"
+          cp "$APK" PhoneAI.apk
           ls -lh PhoneAI.apk
 
       # ── 10. Create GitHub Release ─────────────────────────────────
