@@ -49,6 +49,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         setupCustomization()
+
+        if (intent.action == "ACTION_FORCE_UPDATE") {
+            android.widget.Toast.makeText(this, "Checking for updates...", android.widget.Toast.LENGTH_SHORT).show()
+            // The CoroutineScope above will naturally checkAndPrompt() for us!
+        }
     }
 
     private fun setupCustomization() {

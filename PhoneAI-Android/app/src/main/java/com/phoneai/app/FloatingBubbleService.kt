@@ -412,15 +412,54 @@ class FloatingBubbleService : Service() {
             PendingIntent.FLAG_IMMUTABLE
         )
 
+        val updateIntent = PendingIntent.getActivity(
+            this, 2,
+            Intent(this, MainActivity::class.java).apply { action = "ACTION_FORCE_UPDATE" },
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val replyIntent = Intent(this, FloatingBubbleService::class.java).apply {
+            action = "ACTION_REPLY"
+        }
+        val replyPendingIntent = PendingIntent.getService(
+            this, 3, replyIntent, PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val remoteInput = androidx.core.app.RemoteInput.Builder("message")
+            .setLabel("Message Baymax...")
+            .build()
+
+        val replyAction = NotificationCompat.Action.Builder(
+            android.R.drawable.ic_dialog_email, "Message", replyPendingIntent
+        ).addRemoteInput(remoteInput).build()
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("PhoneAI Active")
-            .setContentText("Floating ball is running — tap to open app")
+            .setContentText("Tap to open. Reply directly or check updates.")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentIntent(tapIntent)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop Service", stopIntent)
+            .addAction(replyAction)
+            .addAction(android.R.drawable.ic_popup_sync, "Update", updateIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop", stopIntent)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == "ACTION_REPLY") {
+            val results = androidx.core.app.RemoteInput.getResultsFromIntent(intent)
+            val text = results?.getCharSequence("message")?.toString()
+            if (!text.isNullOrBlank()) {
+                if (!isChatVisible) showChat()
+                val input = chatView?.findViewById<EditText>(R.id.etInput)
+                input?.setText("")
+                handleUserMessage(text)
+            }
+            // Dismiss the exact reply state and update notification
+            startForeground(NOTIFICATION_ID, buildNotification())
+        }
+        return super.onStartCommand(intent, flags, startId)
     }
 
     // ── UTILS ──────────────────────────────────────────────────────
