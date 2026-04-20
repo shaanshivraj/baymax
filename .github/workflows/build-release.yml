@@ -16,26 +16,32 @@ jobs:
 
     steps:
 
-      # ── 1. Checkout code ──────────────────────────────────────────
+      # ── 1. Checkout ───────────────────────────────────────────────
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # ── 2. Set up JDK 21 ─────────────────────────────────────────
-      - name: Set up JDK 21
+      # ── 2. Set up JDK 17 (LTS, widely compatible) ─────────────────
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
-      # ── 3. Set up Android SDK ─────────────────────────────────────
+      # ── 3. Install Gradle 8.6 explicitly ─────────────────────────
+      - name: Install Gradle
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.6-bin.zip -O /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /opt/gradle
+          echo "/opt/gradle/gradle-8.6/bin" >> $GITHUB_PATH
+
+      # ── 4. Setup Android SDK ──────────────────────────────────────
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # ── 4. Read current version & bump it ─────────────────────────
+      # ── 5. Compute next version ───────────────────────────────────
       - name: Compute next version
         id: ver
         run: |
@@ -47,46 +53,42 @@ jobs:
           echo "new_code=$NEW_CODE"  >> $GITHUB_OUTPUT
           echo "new_name=$NEW_NAME"  >> $GITHUB_OUTPUT
           echo "tag=$TAG"            >> $GITHUB_OUTPUT
-          echo "🔢 Bumping version: $OLD_CODE → $NEW_CODE ($TAG)"
+          echo "🔢 $OLD_CODE → $NEW_CODE ($TAG)"
 
-      # ── 5. Patch versionCode in build.gradle ──────────────────────
-      - name: Patch versionCode in build.gradle
+      # ── 6. Patch versionCode in build.gradle ─────────────────────
+      - name: Patch versionCode
         run: |
           sed -i "s/versionCode [0-9]*/versionCode ${{ steps.ver.outputs.new_code }}/" \
             PhoneAI-Android/app/build.gradle
           sed -i "s/versionName \".*\"/versionName \"${{ steps.ver.outputs.new_name }}\"/" \
             PhoneAI-Android/app/build.gradle
-          echo "✅ build.gradle patched"
+          grep "versionCode\|versionName" PhoneAI-Android/app/build.gradle
 
-      # ── 6. Write local.properties (SDK path for Linux) ───────────
+      # ── 7. Create local.properties ────────────────────────────────
       - name: Create local.properties
-        run: echo "sdk.dir=$ANDROID_HOME" > PhoneAI-Android/local.properties
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > PhoneAI-Android/local.properties
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> PhoneAI-Android/local.properties
+          echo "✅ local.properties created"
 
-      # ── 7. Make gradlew executable ────────────────────────────────
-      - name: Make gradlew executable
-        run: chmod +x PhoneAI-Android/gradlew 2>/dev/null || true
-
-      # ── 8. Build APK ──────────────────────────────────────────────
+      # ── 8. Build APK ─────────────────────────────────────────────
       - name: Build APK
         run: |
           cd PhoneAI-Android
-          gradle assembleDebug --no-daemon 2>&1 | tail -20
+          gradle assembleDebug --no-daemon --stacktrace
         env:
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
-      # ── 9. Copy & rename APK ─────────────────────────────────────
-      - name: Rename APK
+      # ── 9. Find & copy APK ────────────────────────────────────────
+      - name: Copy APK
         run: |
-          APK=$(find PhoneAI-Android/app/build/outputs/apk -name "*.apk" | head -1)
-          if [ -z "$APK" ]; then
-            echo "❌ APK not found! Searching..."
-            find PhoneAI-Android/app/build -name "*.apk" 2>/dev/null
-            exit 1
-          fi
-          echo "✅ Found APK: $APK"
+          echo "Searching for APK..."
+          find PhoneAI-Android -name "*.apk" 2>/dev/null
+          APK=$(find PhoneAI-Android -name "*.apk" | head -1)
+          if [ -z "$APK" ]; then echo "❌ No APK found!"; exit 1; fi
           cp "$APK" PhoneAI.apk
-          ls -lh PhoneAI.apk
+          echo "✅ APK size: $(du -h PhoneAI.apk | cut -f1)"
 
       # ── 10. Create GitHub Release ─────────────────────────────────
       - name: Create GitHub Release
@@ -97,39 +99,30 @@ jobs:
           name: "PhoneAI ${{ steps.ver.outputs.tag }}"
           body: |
             ## PhoneAI ${{ steps.ver.outputs.tag }}
-            Auto-built by GitHub Actions on ${{ github.event.head_commit.timestamp }}
-
             **Changes:** ${{ github.event.head_commit.message }}
           files: PhoneAI.apk
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # ── 11. Update version.json in repo ──────────────────────────
+      # ── 11. Update version.json ───────────────────────────────────
       - name: Update version.json
         run: |
           TAG="${{ steps.ver.outputs.tag }}"
           NEW_CODE="${{ steps.ver.outputs.new_code }}"
           NEW_NAME="${{ steps.ver.outputs.new_name }}"
           APK_URL="https://github.com/shaanshivraj/baymax/releases/download/${TAG}/PhoneAI.apk"
-          DATE=$(date '+%d %b %Y')
+          printf '{\n  "version_code": %s,\n  "version_name": "%s",\n  "apk_url": "%s",\n  "changelog": "%s"\n}\n' \
+            "$NEW_CODE" "$NEW_NAME" "$APK_URL" \
+            "Auto-update $(date '+%d %b %Y'): ${{ github.event.head_commit.message }}" \
+            > version.json
+          cat version.json
 
-          cat > version.json << JSONEOF
-          {
-            "version_code": ${NEW_CODE},
-            "version_name": "${NEW_NAME}",
-            "apk_url": "${APK_URL}",
-            "changelog": "Auto-update ${DATE}: ${{ github.event.head_commit.message }}"
-          }
-          JSONEOF
-
-          echo "✅ version.json updated to code=$NEW_CODE"
-
-      # ── 12. Commit version bump back ─────────────────────────────
+      # ── 12. Commit version bump ───────────────────────────────────
       - name: Commit version bump
         run: |
           git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add version.json PhoneAI-Android/app/build.gradle
-          git commit -m "chore: auto-bump to ${{ steps.ver.outputs.tag }} [skip ci]" || echo "Nothing to commit"
+          git diff --staged --quiet || git commit -m "chore: bump to ${{ steps.ver.outputs.tag }} [skip ci]"
           git push
