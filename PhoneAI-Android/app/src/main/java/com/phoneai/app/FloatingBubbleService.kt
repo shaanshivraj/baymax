@@ -229,7 +229,7 @@ class FloatingBubbleService : Service() {
         scrollToBottom()
 
         val statusTv = chatView?.findViewById<TextView>(R.id.tvStatus)
-        statusTv?.text = "💭 Thinking..."
+        statusTv?.text = "🤖 Baymax is thinking..."
         statusTv?.visibility = View.VISIBLE
 
         scope.launch {
