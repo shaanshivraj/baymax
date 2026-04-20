@@ -69,7 +69,27 @@
             android:max="100"
             android:progress="36"
             android:progressTint="#7C3AED"
-            android:thumbTint="#7C3AED" />
+            android:thumbTint="#7C3AED"
+            android:layout_marginBottom="16dp" />
+
+        <Switch
+            android:id="@+id/switchAutoStart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Auto-start on Boot"
+            android:textColor="#F1F0FF"
+            android:textSize="15sp"
+            android:layout_marginBottom="12dp"
+            android:theme="@style/Theme.AppCompat" />
+
+        <Switch
+            android:id="@+id/switchTTS"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Text-to-Speech (Baymax Speaks)"
+            android:textColor="#F1F0FF"
+            android:textSize="15sp"
+            android:theme="@style/Theme.AppCompat" />
     </LinearLayout>
 
     <TextView

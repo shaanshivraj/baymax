@@ -33,6 +33,12 @@ import kotlin.math.abs
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.IntentFilter
+import android.speech.tts.TextToSpeech
+import android.view.HapticFeedbackConstants
+import android.text.Html
+import java.util.Locale
+import org.json.JSONArray
+import org.json.JSONObject
 
 class FloatingBubbleService : Service() {
 
@@ -55,6 +61,9 @@ class FloatingBubbleService : Service() {
 
     // Conversation memory (role → content pairs)
     private val messages = mutableListOf<Pair<String, String>>()
+
+    // TTS
+    private var tts: TextToSpeech? = null
 
     // Coroutine scope tied to service lifecycle
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -95,16 +104,59 @@ class FloatingBubbleService : Service() {
             registerReceiver(configReceiver, filter)
         }
         
+        loadMessages()
+        initTTS()
         showBubble()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        saveMessages()
+        tts?.stop()
+        tts?.shutdown()
         unregisterReceiver(configReceiver)
         scope.cancel()
         removeBubble()
         removeChat()
         stopRecorder()
+    }
+
+    // ── PERSISTENCE & TTS ──────────────────────────────────────────
+
+    private fun loadMessages() {
+        try {
+            val file = File(filesDir, "chat_history.json")
+            if (file.exists()) {
+                val jsonArr = JSONArray(file.readText())
+                for (i in 0 until jsonArr.length()) {
+                    val obj = jsonArr.getJSONObject(i)
+                    messages.add(Pair(obj.getString("role"), obj.getString("content")))
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
+    private fun saveMessages() {
+        try {
+            val jsonArr = JSONArray()
+            // Keep last 50 messages to prevent huge files
+            val recentMessages = messages.takeLast(50)
+            for (msg in recentMessages) {
+                val obj = JSONObject()
+                obj.put("role", msg.first)
+                obj.put("content", msg.second)
+                jsonArr.put(obj)
+            }
+            File(filesDir, "chat_history.json").writeText(jsonArr.toString())
+        } catch (_: Exception) {}
+    }
+
+    private fun initTTS() {
+        tts = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                tts?.language = Locale.US
+            }
+        }
     }
 
     // ── FLOATING BUBBLE ────────────────────────────────────────────
@@ -177,7 +229,10 @@ class FloatingBubbleService : Service() {
                     true
                 }
                 MotionEvent.ACTION_UP -> {
-                    if (!moved) toggleChat()
+                    if (!moved) {
+                        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                        toggleChat()
+                    }
                     true
                 }
                 else -> false
@@ -238,6 +293,7 @@ class FloatingBubbleService : Service() {
             val input = view.findViewById<EditText>(R.id.etInput)
             val text = input.text.toString().trim()
             if (text.isNotEmpty()) {
+                view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                 input.text.clear()
                 handleUserMessage(text)
             }
@@ -297,6 +353,14 @@ class FloatingBubbleService : Service() {
             statusTv?.visibility = View.GONE
             addMessageBubble("assistant", reply)
             scrollToBottom()
+            saveMessages()
+            
+            val prefs = getSharedPreferences("phoneai_prefs", Context.MODE_PRIVATE)
+            if (prefs.getBoolean("tts_enabled", true)) {
+                // Strip markdown syntax before speaking
+                val spokenText = reply.replace(Regex("[*#`]"), "")
+                tts?.speak(spokenText, TextToSpeech.QUEUE_FLUSH, null, null)
+            }
         }
     }
 
@@ -304,8 +368,22 @@ class FloatingBubbleService : Service() {
         val container = chatView?.findViewById<LinearLayout>(R.id.messagesContainer) ?: return
         val isUser = role == "user"
 
+        var displayContent = content.replace(Regex("<think>[\\s\\S]*?</think>", setOf(RegexOption.IGNORE_CASE)), "").trim()
+        
+        // Basic Markdown to HTML parsing
+        displayContent = displayContent
+            .replace(Regex("\\*\\*(.*?)\\*\\*"), "<b>$1</b>")
+            .replace(Regex("\\*(.*?)\\*"), "<i>$1</i>")
+            .replace(Regex("`(.*?)`"), "<tt>$1</tt>")
+            .replace("\n", "<br>")
+
         val tv = TextView(this).apply {
-            text = content.replace(Regex("<think>[\\s\\S]*?</think>", setOf(RegexOption.IGNORE_CASE)), "").trim()
+            text = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Html.fromHtml(displayContent, Html.FROM_HTML_MODE_COMPACT)
+            } else {
+                @Suppress("DEPRECATION")
+                Html.fromHtml(displayContent)
+            }
             textSize = 14f
             setTextColor(0xFFF1F0FF.toInt())
             setPadding(dpToPx(12), dpToPx(8), dpToPx(12), dpToPx(8))

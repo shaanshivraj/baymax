@@ -81,6 +81,19 @@ class MainActivity : AppCompatActivity() {
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
+
+        val switchAutoStart = findViewById<android.widget.Switch>(R.id.switchAutoStart)
+        val switchTTS = findViewById<android.widget.Switch>(R.id.switchTTS)
+
+        switchAutoStart.isChecked = prefs.getBoolean("auto_start", true)
+        switchAutoStart.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("auto_start", isChecked).apply()
+        }
+
+        switchTTS.isChecked = prefs.getBoolean("tts_enabled", true)
+        switchTTS.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("tts_enabled", isChecked).apply()
+        }
     }
 
     override fun onResume() {
