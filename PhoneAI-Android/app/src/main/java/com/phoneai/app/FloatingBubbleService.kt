@@ -47,6 +47,7 @@ class FloatingBubbleService : Service() {
         private const val CHANNEL_ID = "phoneai_bubble"
         const val ACTION_UPDATE_SIZE = "com.phoneai.app.UPDATE_SIZE"
         const val ACTION_STOP_SERVICE = "com.phoneai.app.STOP_SERVICE"
+        const val ACTION_TOGGLE_CHAT = "com.phoneai.app.TOGGLE_CHAT"
     }
 
     private lateinit var windowManager: WindowManager
@@ -75,6 +76,7 @@ class FloatingBubbleService : Service() {
             when (intent?.action) {
                 ACTION_UPDATE_SIZE -> updateBubbleSize()
                 ACTION_STOP_SERVICE -> stopSelf()
+                ACTION_TOGGLE_CHAT -> toggleChat()
             }
         }
     }
@@ -93,6 +95,7 @@ class FloatingBubbleService : Service() {
             val filter = IntentFilter().apply {
                 addAction(ACTION_UPDATE_SIZE)
                 addAction(ACTION_STOP_SERVICE)
+                addAction(ACTION_TOGGLE_CHAT)
             }
             registerReceiver(configReceiver, filter, RECEIVER_NOT_EXPORTED)
         } else {
@@ -100,6 +103,7 @@ class FloatingBubbleService : Service() {
             val filter = IntentFilter().apply {
                 addAction(ACTION_UPDATE_SIZE)
                 addAction(ACTION_STOP_SERVICE)
+                addAction(ACTION_TOGGLE_CHAT)
             }
             registerReceiver(configReceiver, filter)
         }

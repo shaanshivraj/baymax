@@ -17,6 +17,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import android.widget.SeekBar
 import android.content.Context
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import androidx.core.app.NotificationCompat
 
 class MainActivity : AppCompatActivity() {
 
@@ -96,6 +99,26 @@ class MainActivity : AppCompatActivity() {
         switchTTS.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean("tts_enabled", isChecked).apply()
         }
+
+        findViewById<Button>(R.id.btnTestNotification).setOnClickListener {
+            sendHiiNotification()
+        }
+    }
+
+    private fun sendHiiNotification() {
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel("test_channel", "Test Notifications", NotificationManager.IMPORTANCE_HIGH)
+            manager.createNotificationChannel(channel)
+        }
+        val notif = NotificationCompat.Builder(this, "test_channel")
+            .setSmallIcon(R.drawable.ic_ai) // Assuming this icon exists
+            .setContentTitle("Baymax")
+            .setContentText("Hii! This is your custom notification.")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+        manager.notify(999, notif)
     }
 
     override fun onResume() {

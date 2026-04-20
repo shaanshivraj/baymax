@@ -89,7 +89,28 @@
             android:text="Text-to-Speech (Baymax Speaks)"
             android:textColor="#F1F0FF"
             android:textSize="15sp"
+            android:layout_marginBottom="16dp"
             android:theme="@style/Theme.AppCompat" />
+
+        <Button
+            android:id="@+id/btnTestNotification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🔔 Send 'Hii' Notification"
+            android:backgroundTint="#3B82F6"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvAccessibilityStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="To use Double-Tap Volume Down, enable 'PhoneAI' in your phone's Settings ⚙️ -> Accessibility."
+            android:textColor="#A09EC0"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:lineSpacingMultiplier="1.2" />
     </LinearLayout>
 
     <TextView

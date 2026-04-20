@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PhoneAI</string>
+    <string name="accessibility_service_description">Allows Baymax to be triggered quickly by double-tapping the Volume Down button from anywhere on your phone.</string>
 </resources>
