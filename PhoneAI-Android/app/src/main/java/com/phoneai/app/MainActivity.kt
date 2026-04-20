@@ -37,6 +37,12 @@ class MainActivity : AppCompatActivity() {
             requestPermissionsAndLaunch()
         }
 
+        findViewById<Button>(R.id.btnStop).setOnClickListener {
+            stopService(Intent(this, FloatingBubbleService::class.java))
+            findViewById<TextView>(R.id.tvStatus).text = "Service Stopt"
+            updateStatusText()
+        }
+
         // Silent OTA update check on every launch
         CoroutineScope(Dispatchers.Main + SupervisorJob()).launch {
             UpdateChecker.checkAndPrompt(this@MainActivity)

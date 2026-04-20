@@ -82,19 +82,39 @@
         android:gravity="center"
         android:layout_marginBottom="20dp" />
 
-    <Button
-        android:id="@+id/btnStart"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="🚀  Launch Floating Ball"
-        android:backgroundTint="#7C3AED"
-        android:textColor="#FFFFFF"
-        android:textSize="15sp"
-        android:paddingStart="36dp"
-        android:paddingEnd="36dp"
-        android:paddingTop="14dp"
-        android:paddingBottom="14dp"
-        android:layout_marginBottom="32dp" />
+        android:orientation="horizontal"
+        android:layout_marginBottom="32dp">
+
+        <Button
+            android:id="@+id/btnStart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🚀 Launch"
+            android:backgroundTint="#7C3AED"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="14dp"
+            android:layout_marginEnd="12dp" />
+
+        <Button
+            android:id="@+id/btnStop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⏹️ Stop"
+            android:backgroundTint="#EF4444"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="14dp" />
+    </LinearLayout>
 
     <TextView
         android:layout_width="match_parent"

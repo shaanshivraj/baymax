@@ -40,6 +40,7 @@ class FloatingBubbleService : Service() {
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_ID = "phoneai_bubble"
         const val ACTION_UPDATE_SIZE = "com.phoneai.app.UPDATE_SIZE"
+        const val ACTION_STOP_SERVICE = "com.phoneai.app.STOP_SERVICE"
     }
 
     private lateinit var windowManager: WindowManager
@@ -62,8 +63,9 @@ class FloatingBubbleService : Service() {
     
     private val configReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == ACTION_UPDATE_SIZE) {
-                updateBubbleSize()
+            when (intent?.action) {
+                ACTION_UPDATE_SIZE -> updateBubbleSize()
+                ACTION_STOP_SERVICE -> stopSelf()
             }
         }
     }
@@ -79,10 +81,18 @@ class FloatingBubbleService : Service() {
         startForeground(NOTIFICATION_ID, buildNotification())
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(configReceiver, IntentFilter(ACTION_UPDATE_SIZE), RECEIVER_NOT_EXPORTED)
+            val filter = IntentFilter().apply {
+                addAction(ACTION_UPDATE_SIZE)
+                addAction(ACTION_STOP_SERVICE)
+            }
+            registerReceiver(configReceiver, filter, RECEIVER_NOT_EXPORTED)
         } else {
             @Suppress("UnspecifiedRegisterReceiverFlag")
-            registerReceiver(configReceiver, IntentFilter(ACTION_UPDATE_SIZE))
+            val filter = IntentFilter().apply {
+                addAction(ACTION_UPDATE_SIZE)
+                addAction(ACTION_STOP_SERVICE)
+            }
+            registerReceiver(configReceiver, filter)
         }
         
         showBubble()
@@ -217,6 +227,7 @@ class FloatingBubbleService : Service() {
     private fun setupChatUI() {
         val view = chatView ?: return
 
+        view.findViewById<ImageButton>(R.id.btnQuitApp).setOnClickListener { stopSelf() }
         view.findViewById<ImageButton>(R.id.btnClose).setOnClickListener { removeChat() }
 
         view.findViewById<ImageButton>(R.id.btnSend).setOnClickListener {
@@ -394,11 +405,19 @@ class FloatingBubbleService : Service() {
             Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE
         )
+        
+        val stopIntent = PendingIntent.getBroadcast(
+            this, 1,
+            Intent(ACTION_STOP_SERVICE),
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("PhoneAI Active")
             .setContentText("Floating ball is running — tap to open app")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentIntent(tapIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop Service", stopIntent)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
