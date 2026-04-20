@@ -190,6 +190,11 @@ class FloatingBubbleService : Service() {
         makeDraggable(bubbleView!!, params)
         updateBubbleSize()
         startBreathingAnimation(bubbleView!!)
+
+        // Close bubble button logic
+        bubbleView?.findViewById<View>(R.id.btnCloseBubble)?.setOnClickListener {
+            stopSelf()
+        }
     }
 
     private fun updateBubbleSize() {
@@ -216,6 +221,8 @@ class FloatingBubbleService : Service() {
         var rawStartX = 0f; var rawStartY = 0f
         var moved = false
 
+        val touchSlop = android.view.ViewConfiguration.get(this).scaledTouchSlop
+
         view.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
@@ -226,7 +233,7 @@ class FloatingBubbleService : Service() {
                 MotionEvent.ACTION_MOVE -> {
                     val dx = (event.rawX - rawStartX).toInt()
                     val dy = (event.rawY - rawStartY).toInt()
-                    if (abs(dx) > 5 || abs(dy) > 5) moved = true
+                    if (abs(dx) > touchSlop || abs(dy) > touchSlop) moved = true
                     params.x = startX + dx
                     params.y = startY + dy
                     windowManager.updateViewLayout(view, params)
