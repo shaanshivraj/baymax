@@ -15,6 +15,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import android.widget.SeekBar
+import android.content.Context
 
 class MainActivity : AppCompatActivity() {
 
@@ -39,6 +41,35 @@ class MainActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.Main + SupervisorJob()).launch {
             UpdateChecker.checkAndPrompt(this@MainActivity)
         }
+
+        setupCustomization()
+    }
+
+    private fun setupCustomization() {
+        val prefs = getSharedPreferences("phoneai_prefs", Context.MODE_PRIVATE)
+        // Default size is 66dp. Let's map it: 40dp to 120dp. 
+        // SeekBar 0-100 maps to 40-140dp. Default 66dp means progress 26.
+        val currentSize = prefs.getInt("bubble_size", 66)
+        
+        val seekSize = findViewById<SeekBar>(R.id.seekSize)
+        val tvLabel = findViewById<TextView>(R.id.tvSizeLabel)
+        
+        seekSize.progress = currentSize - 40
+        tvLabel.text = "Bubble Size: ${currentSize}dp"
+
+        seekSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val newSize = progress + 40
+                tvLabel.text = "Bubble Size: ${newSize}dp"
+                prefs.edit().putInt("bubble_size", newSize).apply()
+                
+                // Notify service to update instantly
+                sendBroadcast(Intent("com.phoneai.app.UPDATE_SIZE"))
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
     }
 
     override fun onResume() {

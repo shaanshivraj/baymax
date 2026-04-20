@@ -30,11 +30,16 @@ import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.math.abs
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.IntentFilter
+
 class FloatingBubbleService : Service() {
 
     companion object {
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_ID = "phoneai_bubble"
+        const val ACTION_UPDATE_SIZE = "com.phoneai.app.UPDATE_SIZE"
     }
 
     private lateinit var windowManager: WindowManager
@@ -53,6 +58,16 @@ class FloatingBubbleService : Service() {
     // Coroutine scope tied to service lifecycle
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
+    // ── CONFIGURATION RECEIVER ─────────────────────────────────────
+    
+    private val configReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == ACTION_UPDATE_SIZE) {
+                updateBubbleSize()
+            }
+        }
+    }
+
     // ── LIFECYCLE ──────────────────────────────────────────────────
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -62,11 +77,20 @@ class FloatingBubbleService : Service() {
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(configReceiver, IntentFilter(ACTION_UPDATE_SIZE), RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(configReceiver, IntentFilter(ACTION_UPDATE_SIZE))
+        }
+        
         showBubble()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        unregisterReceiver(configReceiver)
         scope.cancel()
         removeBubble()
         removeChat()
@@ -98,7 +122,27 @@ class FloatingBubbleService : Service() {
 
         windowManager.addView(bubbleView, params)
         makeDraggable(bubbleView!!, params)
+        updateBubbleSize()
         startBreathingAnimation(bubbleView!!)
+    }
+
+    private fun updateBubbleSize() {
+        val prefs = getSharedPreferences("phoneai_prefs", Context.MODE_PRIVATE)
+        val bubbleSizeDp = prefs.getInt("bubble_size", 66)
+        val sizePx = dpToPx(bubbleSizeDp)
+
+        bubbleView?.findViewById<View>(R.id.bubbleRoot)?.layoutParams?.let {
+            it.width = sizePx
+            it.height = sizePx
+            bubbleView?.findViewById<View>(R.id.bubbleRoot)?.layoutParams = it
+        }
+        bubbleView?.findViewById<View>(R.id.bubbleIcon)?.layoutParams?.let {
+            it.width = sizePx
+            it.height = sizePx
+            bubbleView?.findViewById<View>(R.id.bubbleIcon)?.layoutParams = it
+        }
+
+        bubbleView?.let { windowManager.updateViewLayout(it, it.layoutParams) }
     }
 
     private fun makeDraggable(view: View, params: WindowManager.LayoutParams) {
