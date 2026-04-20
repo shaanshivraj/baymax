@@ -1,0 +1,19 @@
+# Gradle build outputs
+PhoneAI-Android/app/build/
+PhoneAI-Android/build/
+PhoneAI-Android/.gradle/
+PhoneAI-Android/local.properties
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.iml
+
+# Log files
+PhoneAI-Android/*.txt
+
+# Deploy script (local only)
+PhoneAI-Android/deploy.ps1

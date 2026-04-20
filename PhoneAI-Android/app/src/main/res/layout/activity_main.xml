@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="#0A0A0F"
+    android:padding="32dp">
+
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/ic_ai"
+        android:background="@drawable/bubble_bg"
+        android:padding="18dp"
+        android:layout_marginBottom="24dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="PhoneAI"
+        android:textColor="#F1F0FF"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-bold"
+        android:layout_marginBottom="6dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Floating AI Assistant"
+        android:textColor="#A09EC0"
+        android:textSize="15sp"
+        android:layout_marginBottom="40dp" />
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Tap below to get started"
+        android:textColor="#A09EC0"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginBottom="20dp" />
+
+    <Button
+        android:id="@+id/btnStart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🚀  Launch Floating Ball"
+        android:backgroundTint="#7C3AED"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:paddingStart="36dp"
+        android:paddingEnd="36dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="14dp"
+        android:layout_marginBottom="32dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="• Grant 'Draw over other apps' permission\n• Grant microphone access for voice input\n• Ball floats above all your apps\n• Tap ball to open chat\n• Hold 🎤 mic button to speak (Whisper AI)"
+        android:textColor="#5F5D80"
+        android:textSize="13sp"
+        android:gravity="center"
+        android:lineSpacingMultiplier="1.6" />
+
+</LinearLayout>

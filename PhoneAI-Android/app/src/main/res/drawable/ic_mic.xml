@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Mic body -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#A09EC0"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M12,1 C10.34,1 9,2.34 9,4 L9,12 C9,13.66 10.34,15 12,15 C13.66,15 15,13.66 15,12 L15,4 C15,2.34 13.66,1 12,1 Z" />
+    <!-- Arc below mic -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#A09EC0"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M19,10 C19,14.42 15.87,18 12,18 C8.13,18 5,14.42 5,10" />
+    <!-- Stem -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#A09EC0"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M12,18 L12,23" />
+    <!-- Base line -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#A09EC0"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M8,23 L16,23" />
+</vector>
