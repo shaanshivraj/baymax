@@ -117,11 +117,11 @@ class MainActivity : AppCompatActivity() {
             overlayResultLauncher.launch(intent)
             return
         }
-        startBubbleService()
+        startBubbleService(minimize = true)
     }
 
     private fun checkAndLaunch() {
-        if (hasAllPermissions()) startBubbleService()
+        if (hasAllPermissions()) startBubbleService(minimize = true)
         else updateStatusText()
     }
 
@@ -131,15 +131,17 @@ class MainActivity : AppCompatActivity() {
         return overlay && mic
     }
 
-    private fun startBubbleService() {
+    private fun startBubbleService(minimize: Boolean = false) {
         val intent = Intent(this, FloatingBubbleService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
         } else {
             startService(intent)
         }
-        // Minimize so the floating bubble is visible
-        moveTaskToBack(true)
+        
+        if (minimize) {
+            moveTaskToBack(true)
+        }
     }
 
     override fun onRequestPermissionsResult(
