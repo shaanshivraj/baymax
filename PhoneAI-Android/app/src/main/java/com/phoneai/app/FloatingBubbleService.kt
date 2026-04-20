@@ -482,26 +482,34 @@ class FloatingBubbleService : Service() {
     }
 
     private fun buildNotification(): Notification {
+        val tapIntentActivity = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
         val tapIntent = PendingIntent.getActivity(
             this, 0,
-            Intent(this, MainActivity::class.java),
-            PendingIntent.FLAG_IMMUTABLE
+            tapIntentActivity,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         
         val stopIntent = PendingIntent.getBroadcast(
             this, 1,
-            Intent(ACTION_STOP_SERVICE),
+            Intent(ACTION_STOP_SERVICE).setPackage(packageName),
             PendingIntent.FLAG_IMMUTABLE
         )
 
+        val updateIntentActivity = Intent(this, MainActivity::class.java).apply { 
+            action = "ACTION_FORCE_UPDATE"
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
         val updateIntent = PendingIntent.getActivity(
             this, 2,
-            Intent(this, MainActivity::class.java).apply { action = "ACTION_FORCE_UPDATE" },
+            updateIntentActivity,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         val replyIntent = Intent(this, FloatingBubbleService::class.java).apply {
             action = "ACTION_REPLY"
+            setPackage(packageName)
         }
         val replyPendingIntent = PendingIntent.getService(
             this, 3, replyIntent, PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT

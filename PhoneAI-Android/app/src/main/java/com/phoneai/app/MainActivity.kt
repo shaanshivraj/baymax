@@ -75,7 +75,9 @@ class MainActivity : AppCompatActivity() {
                 prefs.edit().putInt("bubble_size", newSize).apply()
                 
                 // Notify service to update instantly
-                sendBroadcast(Intent("com.phoneai.app.UPDATE_SIZE"))
+                val updateIntent = Intent("com.phoneai.app.UPDATE_SIZE")
+                updateIntent.setPackage(packageName)
+                sendBroadcast(updateIntent)
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
@@ -100,7 +102,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         updateStatusText()
         // Auto-launch if all permissions already granted
-        if (hasAllPermissions()) startBubbleService()
+        if (hasAllPermissions()) startBubbleService(minimize = false)
     }
 
     private fun updateStatusText() {
@@ -108,7 +110,7 @@ class MainActivity : AppCompatActivity() {
         val overlay = Settings.canDrawOverlays(this)
         val mic = checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
         tv.text = when {
-            overlay && mic -> "✅ Ready! Launching floating bubble..."
+            overlay && mic -> "✅ Ready! Floating assistant is active."
             !overlay       -> "⚠️ Need 'Draw over other apps' permission"
             !mic           -> "⚠️ Need microphone permission"
             else           -> "Tap below to start"
@@ -145,15 +147,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startBubbleService(minimize: Boolean = false) {
-        val intent = Intent(this, FloatingBubbleService::class.java)
+        val serviceIntent = Intent(this, FloatingBubbleService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent)
+            startForegroundService(serviceIntent)
         } else {
-            startService(intent)
+            startService(serviceIntent)
         }
         
         if (minimize) {
-            moveTaskToBack(true)
+            val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_HOME)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            startActivity(homeIntent)
         }
     }
 
